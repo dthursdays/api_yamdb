@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import User
 
 from ..permissions import IsUserAdmin
-from .serializers import SignUpSerializer, UserSerializer
+from .serializers import SignUpSerializer, UserAdmSerializer, UserSerializer
 
 
 @api_view(['POST'])
@@ -52,7 +52,7 @@ def api_gettoken(request):
 
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserAdmSerializer
     lookup_field = 'username'
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('username', )
@@ -60,10 +60,19 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         username = self.kwargs.get('username')
-        if self.action == 'retrieve' or 'partial_update' or 'update':
+        if self.action == 'destroy':
+            return (IsUserAdmin(),)
+        if self.action == 'retrieve' or 'partial_update':
             if username == 'me':
                 return super().get_permissions()
         return (IsUserAdmin(),)
+
+    def get_serializer_class(self):
+        username = self.kwargs.get('username')
+        if self.action == 'retrieve' or 'partial_update':
+            if username == 'me':
+                return UserSerializer
+        return UserAdmSerializer
 
     def get_object(self):
         username = self.kwargs.get('username')

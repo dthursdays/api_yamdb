@@ -1,11 +1,10 @@
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 ROLE_CHOICES = [
-    ('MODERATOR', 'Модератор'),
-    ('ADMIN', 'Администратор'),
-    ('AUTH_USER', 'Авторизованный пользователь'),
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор'),
+    ('user', 'Авторизованный пользователь'),
 ]
 
 
@@ -32,7 +31,7 @@ class User(AbstractUser):
     role = models.CharField(
         verbose_name='Роль',
         max_length=10,
-        default='AUTH_USER',
+        default='user',
         choices=ROLE_CHOICES
     )
 
@@ -46,11 +45,11 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == 'ADMIN' or self.is_superuser
+        return self.role == 'admin' or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == 'MODERATOR'
+        return self.role == 'moderator'
 
 
 class Title(models.Model):
