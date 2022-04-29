@@ -1,5 +1,5 @@
 from random import choice
-from string import digits
+from string import ascii_lowercase
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import User
 
 from ..permissions import IsUserAdmin
-from .serializers import SignUpSerializer, UserAdmSerializer, UserSerializer
+from .serializers import UserAdmSerializer, UserSerializer
 
 
 @api_view(['POST'])
@@ -20,18 +20,23 @@ from .serializers import SignUpSerializer, UserAdmSerializer, UserSerializer
 def api_signup(request):
     if request.method == 'POST':
         email = request.data.get('email')
-        code = ''.join(choice(digits) for i in range(12))
-        serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
+        username = request.data.get('username')
+        user = get_object_or_404(User, username=username)
+
+        if user.email == email:
+            code = ''.join(choice(ascii_lowercase) for i in range(12))
             send_mail('Ваш код подтверждения для API yamdb',
                       f'Ваш код подтверждения: {code}',
                       'yamdb@yamdb.com',
                       [f'{email}'])
-            serializer.save(confirmation_code=code)
+            user.confirmation_code = code
+            user.save()
             return Response(
                 'Письмо с кодом подтверждения отправлено на вашу почту',
                 status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(('Вы не зарегистрированы администратором, '
+                        'или данные указаны не верно'),
+                        status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
