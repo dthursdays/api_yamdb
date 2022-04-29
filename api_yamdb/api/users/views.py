@@ -80,9 +80,3 @@ class UsersViewSet(viewsets.ModelViewSet):
             return get_object_or_404(User,
                                      username=self.request.user.username)
         return super().get_object()
-
-    def perform_update(self, serializer):
-        username = self.kwargs.get('username')
-        if username == 'me':
-            pass
-        return super().perform_update(serializer)
