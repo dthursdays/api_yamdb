@@ -1,12 +1,6 @@
-from datetime import datetime
 
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-MODERATOR = 'moderator'
-ADMIN = 'admin'
-AUTH_USER = 'user'
 
 ROLE_CHOICES = [
     ('MODERATOR', 'Модератор'),
@@ -28,9 +22,13 @@ class User(AbstractUser):
         blank=False,
         null=False
     )
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
-    bio = models.TextField(verbose_name='Биография', blank=True,)
+    confirmation_code = models.CharField(verbose_name='Код подтверждения',
+                                         max_length=100)
+    first_name = models.CharField(verbose_name='Имя', max_length=150,
+                                  blank=True)
+    last_name = models.CharField(verbose_name='Фамилия', max_length=150,
+                                 blank=True)
+    bio = models.TextField(verbose_name='Биография', blank=True)
     role = models.CharField(
         verbose_name='Роль',
         max_length=10,
@@ -48,27 +46,15 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN
+        return self.role == 'ADMIN' or self.is_superuser
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == 'MODERATOR'
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=300,)
-    year = models.IntegerField(
-        validators=[
-            MinValueValidator(100),
-            MaxValueValidator(datetime.now().year)
-        ]
-    )
-    description = models.TextField(max_length=256)
-    genre = models.ManyToManyField()
-    category = models.ForeignKey()
-
-    def __str__(self):
-        return self.name
+    pass
 
 
 class Category(models.Model):
