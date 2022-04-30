@@ -1,4 +1,3 @@
-from requests import request
 from rest_framework import viewsets, mixins, filters
 from reviews.models import Category, Genre, Title
 from django_filters.rest_framework import DjangoFilterBackend
@@ -33,7 +32,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly)
     filter_backends = (DjangoFilterBackend,)
-
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
