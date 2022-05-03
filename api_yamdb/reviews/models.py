@@ -83,3 +83,62 @@ class Title(models.Model):
         null=True,
         related_name='titles',
     )
+
+
+class Review(models.Model):
+    """Модель для создания отзыва на произведение"""
+    title = models.ForeignKey(
+        'Title',
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    text = models.TextField(
+        'Текст отзыва',
+    )
+    score = models.IntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        ]
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['title', 'author'])
+        ]
+
+    def __str__(self):
+        return self.text
+
+
+class Comment(models.Model):
+    """Модель для создания комментариев под отзывом"""
+    review = models.ForeignKey(
+        'Review',
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    text = models.TextField(
+        'Текст комментария',
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return self.text
