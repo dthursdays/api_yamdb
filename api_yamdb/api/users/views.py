@@ -4,6 +4,7 @@ from string import ascii_lowercase
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from requests import request
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -32,22 +33,22 @@ def api_signup(request):
                 serializer.data,
                 status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_gettoken(request):
-    if request.method == 'POST':
-        username = request.data.get('username')
-        user = get_object_or_404(User, username=username)
-        if request.data.get('confirmation_code') == user.confirmation_code:
-            refresh = RefreshToken.for_user(user)
-            return Response({'access': str(refresh.access_token), },
-                            status=status.HTTP_200_OK)
-        return Response('Неверный код подтверждения',
-                        status=status.HTTP_400_BAD_REQUEST)
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    if 'username' not in request.data:
+        return Response('Неверные данные', status=status.HTTP_400_BAD_REQUEST)
+    username = request.data.get('username')
+    user = get_object_or_404(User, username=username)
+    if request.data.get('confirmation_code') == user.confirmation_code:
+        refresh = RefreshToken.for_user(user)
+        return Response({'access': str(refresh.access_token), },
+                        status=status.HTTP_200_OK)
+    return Response('Неверные данные',
+                    status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -61,8 +62,9 @@ class UsersViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         username = self.kwargs.get('username')
         if self.action == 'destroy':
-            return (IsUserAdmin(),)
-        if self.action == 'retrieve' or 'partial_update':
+            if username != 'me':
+                return (IsUserAdmin(),)
+        if self.action == 'retrieve' or 'update':
             if username == 'me':
                 return super().get_permissions()
         return (IsUserAdmin(),)
@@ -80,3 +82,11 @@ class UsersViewSet(viewsets.ModelViewSet):
             return get_object_or_404(User,
                                      username=self.request.user.username)
         return super().get_object()
+
+    def destroy(self, request, *args, **kwargs):
+        username = self.kwargs.get('username')
+        if username == 'me' or username == request.user.username:
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        instance = get_object_or_404(User, username=username)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
