@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 ROLE_CHOICES = [
@@ -35,13 +38,8 @@ class User(AbstractUser):
         choices=ROLE_CHOICES
     )
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_user'
-            )
-        ]
+    def __str__(self):
+        return self.name
 
     @property
     def is_admin(self):
@@ -50,10 +48,6 @@ class User(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == 'moderator'
-
-
-class Title(models.Model):
-    pass
 
 
 class Category(models.Model):
@@ -72,9 +66,20 @@ class Genre(models.Model):
         return self.name
 
 
-class Review(models.Model):
-    pass
-
-
-class Comment(models.Model):
-    pass
+class Title(models.Model):
+    name = models.CharField(max_length=300,)
+    year = models.IntegerField(
+        validators=[
+            MinValueValidator(100),
+            MaxValueValidator(datetime.now().year)
+        ]
+    )
+    description = models.TextField(max_length=256)
+    genre = models.ManyToManyField(Genre)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='titles',
+    )
