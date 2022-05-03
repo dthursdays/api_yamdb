@@ -39,7 +39,7 @@ class User(AbstractUser):
     )
 
     def __str__(self):
-        return self.name
+        return self.username
 
     @property
     def is_admin(self):
@@ -76,6 +76,7 @@ class Title(models.Model):
     )
     description = models.TextField(max_length=256)
     genre = models.ManyToManyField(Genre)
+    rating = models.IntegerField(blank=True, null=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -83,6 +84,9 @@ class Title(models.Model):
         null=True,
         related_name='titles',
     )
+
+    def __str__(self):
+        return self.name
 
 
 class Review(models.Model):
@@ -113,7 +117,8 @@ class Review(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['title', 'author'])
+            models.UniqueConstraint(fields=['title', 'author'],
+                                    name='unique title-author')
         ]
 
     def __str__(self):

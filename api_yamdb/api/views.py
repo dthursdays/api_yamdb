@@ -1,5 +1,6 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from reviews.models import Category, Genre, Review, Title
 
@@ -13,8 +14,8 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
-    permission_classes = (IsAdminOrReadOnly)
-    filter_backends = (filters.SearchFilter)
+    permission_classes = (IsAdminOrReadOnly, )
+    filter_backends = (filters.SearchFilter, )
     search_fields = ('name',)
     lookup_field = 'slug'
 
@@ -32,8 +33,9 @@ class GenreViewSet(CreateListDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(Avg("reviews__score"))
     serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrReadOnly)
-    filter_backends = (filters.DjangoFilterBackend,)
+    permission_classes = (IsAdminOrReadOnly, )
+    filter_backends = (DjangoFilterBackend, )
+    filterset_fields = ('category', 'genre__slug', 'name', 'year', )
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
@@ -43,7 +45,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (PermissionsOrReadOnly,)
+    permission_classes = (PermissionsOrReadOnly, )
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -51,11 +53,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=title)
 
         score_sum = 0
-        reviews_queryset = self.get_queryset()
+        reviews_queryset = title.reviews.all()
         for review in reviews_queryset:
-            score_sum = score_sum + review.score
+            score_sum += review.score
         reviews_count = len(reviews_queryset)
-        Title.rating = score_sum // reviews_count
+        title.rating = score_sum // reviews_count
+        title.save()
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -65,7 +68,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (PermissionsOrReadOnly,)
+    permission_classes = (PermissionsOrReadOnly, )
 
     def perform_create(self, serializer):
         review_id = self.kwargs.get('review_id')

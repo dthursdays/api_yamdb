@@ -25,18 +25,21 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category',)
-        read_only_fields = ('__all__')
+        read_only_fields = ('__all__', )
 
 
 class TitleCreateSerialize(TitleSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
-        slug_fields='slug',
-        many=True)
+        slug_field='slug',
+        many=False)
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
-        slug_fields='slug',
+        slug_field='slug',
         many=True)
+    description = serializers.CharField(
+        required=False
+    )
 
     class Meta:
         model = Title
@@ -56,7 +59,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             'id', 'text',
             'author', 'score', 'pub_date',
         )
-        read_only_fields = ('author',)
+        read_only_fields = ('author', )
 
 
 class CommentSerializer(serializers.ModelSerializer):
