@@ -1,6 +1,6 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title
-from django.shortcuts import get_object_or_404
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -24,8 +24,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'genre', 'category',)
+        fields = '__all__'
         read_only_fields = ('__all__', )
 
 
@@ -87,10 +86,7 @@ class ReviewUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = (
-            'id', 'text',
-            'author', 'score', 'pub_date',
-        )
+        fields = '__all__'
         read_only_fields = ('author', )
 
     def validate_score(self, value):

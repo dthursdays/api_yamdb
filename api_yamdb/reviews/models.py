@@ -4,14 +4,14 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-ROLE_CHOICES = [
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
-    ('user', 'Авторизованный пользователь'),
-]
-
 
 class User(AbstractUser):
+
+    class ROLES(models.TextChoices):
+        MODERATOR = 'moderator', 'Модератор'
+        ADMIN = 'admin', 'Администратор'
+        USER = 'user', 'Авторизованный пользователь'
+
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -26,16 +26,12 @@ class User(AbstractUser):
     )
     confirmation_code = models.CharField(verbose_name='Код подтверждения',
                                          max_length=100)
-    first_name = models.CharField(verbose_name='Имя', max_length=150,
-                                  blank=True)
-    last_name = models.CharField(verbose_name='Фамилия', max_length=150,
-                                 blank=True)
     bio = models.TextField(verbose_name='Биография', blank=True)
     role = models.CharField(
         verbose_name='Роль',
         max_length=10,
         default='user',
-        choices=ROLE_CHOICES
+        choices=ROLES.choices
     )
 
     def __str__(self):
@@ -52,7 +48,7 @@ class User(AbstractUser):
 
 class Category(models.Model):
     name = models.CharField(max_length=256, unique=True,)
-    slug = models.SlugField(max_length=50, unique=True,)
+    slug = models.SlugField(unique=True)
 
     def __str__(self):
         return self.name
@@ -60,7 +56,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(max_length=256, unique=True,)
-    slug = models.SlugField(max_length=50, unique=True)
+    slug = models.SlugField(unique=True)
 
     def __str__(self):
         return self.name
@@ -68,7 +64,8 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=300,)
-    year = models.IntegerField(
+    year = models.PositiveSmallIntegerField(
+        db_index=True,
         validators=[
             MinValueValidator(100),
             MaxValueValidator(datetime.now().year)
@@ -104,10 +101,10 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10)
+            MinValueValidator(1, 'Оценка не может быть меньше 1'),
+            MaxValueValidator(10, 'Оценка не может быть выше 10')
         ]
     )
     pub_date = models.DateTimeField(

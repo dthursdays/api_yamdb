@@ -52,7 +52,7 @@ python3 manage.py runserver
 ## Технологии:
 
 - python 3.9.7
-- django 2.2.16
+- django 3.0.0
 - django rest framework 3.12.4
 - django-filter 21.1
 - pyJWT 2.1.0
