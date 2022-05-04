@@ -64,26 +64,28 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)
         self.get_rating(title)
-        
+
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         title = get_object_or_404(Title, id=title_id)
         return title.reviews.select_related()
 
     def perform_destroy(self, instance):
-        if (instance.author == self.request.user
+        if (
+            instance.author == self.request.user
             or self.request.user.is_moderator
             or self.request.user.is_admin
-            ):
+        ):
             super().perform_destroy(instance)
         else:
             raise PermissionDenied('Удаление чужого контента запрещено!')
 
     def perform_update(self, serializer):
-        if (serializer.instance.author == self.request.user
+        if (
+            serializer.instance.author == self.request.user
             or self.request.user.is_moderator
             or self.request.user.is_admin
-            ):
+        ):
             title_id = self.kwargs.get('title_id')
             title = get_object_or_404(Title, id=title_id)
             serializer.save(author=self.request.user, title=title)
