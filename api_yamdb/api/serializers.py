@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title
+from django.shortcuts import get_object_or_404
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -59,6 +60,45 @@ class ReviewSerializer(serializers.ModelSerializer):
             'author', 'score', 'pub_date',
         )
         read_only_fields = ('author', )
+
+    def validate_score(self, value):
+        if value < 1 or value > 10:
+            raise serializers.ValidationError(
+                'Ваша оценка должна быть от 0 до 10'
+            )
+        return value
+
+    def validate(self, value):
+        title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        author = self.context['request'].user
+        if Review.objects.filter(title=title, author=author).exists():
+            raise serializers.ValidationError(
+                'Нельзя оставлять отзыв повторно!'
+            )
+        return value
+
+
+class ReviewUpdateSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Review
+        fields = (
+            'id', 'text',
+            'author', 'score', 'pub_date',
+        )
+        read_only_fields = ('author', )
+
+    def validate_score(self, value):
+        if value < 1 or value > 10:
+            raise serializers.ValidationError(
+                'Ваша оценка должна быть от 0 до 10'
+            )
+        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
