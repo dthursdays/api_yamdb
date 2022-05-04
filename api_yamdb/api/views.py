@@ -8,6 +8,7 @@ from .permissions import IsAdminOrReadOnly, PermissionsOrReadOnly
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, TitleCreateSerialize,
                           TitleSerializer, ReviewSerializer)
+from .filters import TitleFilter
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -31,11 +32,11 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(Avg("reviews__score"))
+    queryset = Title.objects.all().annotate(Avg('reviews__score'))
     serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrReadOnly, )
-    filter_backends = (DjangoFilterBackend, )
-    filterset_fields = ('category', 'genre__slug', 'name', 'year', )
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
