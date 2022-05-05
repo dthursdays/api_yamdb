@@ -4,13 +4,14 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+ROLE_CHOICES = [
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор'),
+    ('user', 'Авторизованный пользователь'),
+]
+
 
 class User(AbstractUser):
-
-    class ROLES(models.TextChoices):
-        MODERATOR = 'moderator', 'Модератор'
-        ADMIN = 'admin', 'Администратор'
-        USER = 'user', 'Авторизованный пользователь'
 
     username = models.CharField(
         max_length=150,
@@ -31,7 +32,7 @@ class User(AbstractUser):
         verbose_name='Роль',
         max_length=10,
         default='user',
-        choices=ROLES.choices
+        choices=ROLE_CHOICES
     )
 
     def __str__(self):
